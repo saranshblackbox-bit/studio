@@ -29,8 +29,8 @@ const StatusInfo: Record<
   }
 > = {
   queued: { icon: Clock, variant: 'secondary', label: 'Queued' },
-  sending: { icon: Loader2, variant: 'outline', label: 'Preparing' },
-  sent: { icon: Send, variant: 'default', label: 'Opened' },
+  sending: { icon: Loader2, variant: 'outline', label: 'Opening Tab' },
+  sent: { icon: Send, variant: 'default', label: 'Actioned' },
   failed: { icon: XCircle, variant: 'destructive', label: 'Failed' },
 };
 
@@ -57,7 +57,7 @@ const LogRow = ({ log }: { log: LogEntry }) => {
       <TableCell>
         <Badge
           variant={Info.variant}
-          className="capitalize flex gap-1.5 items-center"
+          className="capitalize flex gap-1.5 items-center w-[110px] justify-center"
         >
           <Icon
             className={`h-3.5 w-3.5 ${

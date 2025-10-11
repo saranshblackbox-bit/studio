@@ -15,6 +15,8 @@ import MessageComposer from '@/components/feature/message-composer';
 import SendingLog from '@/components/feature/sending-log';
 import { Loader2, Send } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 // Helper to simulate delay
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -70,6 +72,10 @@ export default function Home() {
 
       window.open(whatsappUrl, '_blank');
       
+      await sleep(1000); // Give browser time to focus on the new tab
+
+      // There's no reliable way to know if the message was truly sent.
+      // We'll mark it as 'sent' after opening the tab.
       setLogs((prevLogs) =>
         prevLogs.map((log) =>
           log.contact.id === contact.id
@@ -80,9 +86,10 @@ export default function Home() {
 
       setProgress(((i + 1) / contacts.length) * 100);
       
-      // Add a small delay between opening tabs to avoid browser blocking popups
+      // Add a longer delay between opening tabs to avoid browser blocking popups
+      // and give the user time to confirm the message.
       if (i < contacts.length - 1) {
-        await sleep(2000);
+        await sleep(4000);
       }
     }
 
@@ -95,6 +102,14 @@ export default function Home() {
         <Logo />
       </header>
       <main className="w-full max-w-4xl space-y-8">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>How it works</AlertTitle>
+          <AlertDescription>
+            This tool opens WhatsApp Web tabs for each contact. You may need to <strong>allow pop-ups</strong> from this site. In each new tab, click the send button to send the message.
+          </AlertDescription>
+        </Alert>
+
         <Card>
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-3">
