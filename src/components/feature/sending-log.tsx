@@ -29,7 +29,7 @@ const StatusInfo: Record<
   }
 > = {
   queued: { icon: Clock, variant: 'secondary', label: 'Queued' },
-  sending: { icon: Loader2, variant: 'outline', label: 'Opening Tab' },
+  sending: { icon: Loader2, variant: 'outline', label: 'Loading' },
   sent: { icon: Send, variant: 'default', label: 'Actioned' },
   failed: { icon: XCircle, variant: 'destructive', label: 'Failed' },
 };

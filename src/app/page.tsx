@@ -47,6 +47,9 @@ export default function Home() {
     }));
     setLogs(initialLogs);
 
+    // Give user a moment to see the queued logs
+    await sleep(500);
+
     for (let i = 0; i < contacts.length; i++) {
       const contact = contacts[i];
       
@@ -70,12 +73,14 @@ export default function Home() {
         personalizedMessage
       )}`;
 
-      window.open(whatsappUrl, '_blank');
+      // Use a named window to reuse the same tab
+      window.open(whatsappUrl, 'whatsapp_tab');
       
-      await sleep(1000); // Give browser time to focus on the new tab
+      await sleep(1000); // Give browser time to focus/load the tab
 
       // There's no reliable way to know if the message was truly sent.
-      // We'll mark it as 'sent' after opening the tab.
+      // We'll mark it as 'actioned' after opening the tab and waiting for user action.
+      // The user needs to manually click send.
       setLogs((prevLogs) =>
         prevLogs.map((log) =>
           log.contact.id === contact.id
@@ -86,10 +91,10 @@ export default function Home() {
 
       setProgress(((i + 1) / contacts.length) * 100);
       
-      // Add a longer delay between opening tabs to avoid browser blocking popups
-      // and give the user time to confirm the message.
+      // Add a longer delay to give the user time to confirm the message in the tab
+      // before the app loads the next contact.
       if (i < contacts.length - 1) {
-        await sleep(4000);
+        await sleep(5000); 
       }
     }
 
@@ -106,7 +111,7 @@ export default function Home() {
           <Info className="h-4 w-4" />
           <AlertTitle>How it works</AlertTitle>
           <AlertDescription>
-            This tool opens WhatsApp Web tabs for each contact. You may need to <strong>allow pop-ups</strong> from this site. In each new tab, click the send button to send the message.
+            This tool will open a single WhatsApp Web tab. For each contact, it will load the chat and pre-fill the message. You may need to <strong>allow pop-ups</strong> from this site. In the WhatsApp tab, click the send button to send each message.
           </AlertDescription>
         </Alert>
 
@@ -181,7 +186,7 @@ export default function Home() {
               </CardTitle>
               <CardDescription>
                 {isSending
-                  ? 'Opening WhatsApp tabs. Please confirm sending in each new tab.'
+                  ? 'Loading contacts in WhatsApp. Please confirm sending in the other tab.'
                   : 'Sending process completed.'}
               </CardDescription>
             </CardHeader>
