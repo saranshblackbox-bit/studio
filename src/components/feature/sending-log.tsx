@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Loader2, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, Clock, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useEffect, useState } from 'react';
 
@@ -25,12 +25,13 @@ const StatusInfo: Record<
   {
     icon: React.ComponentType<{ className?: string }>;
     variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    label: string;
   }
 > = {
-  queued: { icon: Clock, variant: 'secondary' },
-  sending: { icon: Loader2, variant: 'outline' },
-  sent: { icon: CheckCircle2, variant: 'default' },
-  failed: { icon: XCircle, variant: 'destructive' },
+  queued: { icon: Clock, variant: 'secondary', label: 'Queued' },
+  sending: { icon: Loader2, variant: 'outline', label: 'Preparing' },
+  sent: { icon: Send, variant: 'default', label: 'Opened' },
+  failed: { icon: XCircle, variant: 'destructive', label: 'Failed' },
 };
 
 const LogRow = ({ log }: { log: LogEntry }) => {
@@ -63,7 +64,7 @@ const LogRow = ({ log }: { log: LogEntry }) => {
               log.status === 'sending' ? 'animate-spin' : ''
             }`}
           />
-          <span>{log.status}</span>
+          <span>{Info.label}</span>
         </Badge>
       </TableCell>
       <TableCell className="text-right text-muted-foreground text-xs">

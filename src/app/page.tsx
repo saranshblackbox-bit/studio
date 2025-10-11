@@ -47,8 +47,7 @@ export default function Home() {
 
     for (let i = 0; i < contacts.length; i++) {
       const contact = contacts[i];
-
-      // Update status to "sending"
+      
       setLogs((prevLogs) =>
         prevLogs.map((log) =>
           log.contact.id === contact.id
@@ -57,23 +56,34 @@ export default function Home() {
         )
       );
 
-      await sleep(1000 + Math.random() * 1000); // Simulate network latency
+      // Personalize message
+      const personalizedMessage = message
+        .replace(/{{name}}/g, contact.name)
+        .replace(/{{phone}}/g, contact.phone);
+      
+      // Sanitize phone number
+      const sanitizedPhone = contact.phone.replace(/\D/g, '');
 
-      // Update status to "sent" or "failed"
-      const isSuccess = Math.random() > 0.1; // 90% success rate
+      const whatsappUrl = `https://web.whatsapp.com/send?phone=${sanitizedPhone}&text=${encodeURIComponent(
+        personalizedMessage
+      )}`;
+
+      window.open(whatsappUrl, '_blank');
+      
       setLogs((prevLogs) =>
         prevLogs.map((log) =>
           log.contact.id === contact.id
-            ? {
-                ...log,
-                status: isSuccess ? 'sent' : 'failed',
-                timestamp: new Date().toISOString(),
-              }
+            ? { ...log, status: 'sent', timestamp: new Date().toISOString() }
             : log
         )
       );
 
       setProgress(((i + 1) / contacts.length) * 100);
+      
+      // Add a small delay between opening tabs to avoid browser blocking popups
+      if (i < contacts.length - 1) {
+        await sleep(2000);
+      }
     }
 
     setIsSending(false);
@@ -156,7 +166,7 @@ export default function Home() {
               </CardTitle>
               <CardDescription>
                 {isSending
-                  ? 'Messages are being sent. Do not close this window.'
+                  ? 'Opening WhatsApp tabs. Please confirm sending in each new tab.'
                   : 'Sending process completed.'}
               </CardDescription>
             </CardHeader>
