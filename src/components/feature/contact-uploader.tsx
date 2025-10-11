@@ -13,7 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Contact } from '@/lib/types';
-import { FileUp, Loader2, Trash2, UserRound } from 'lucide-react';
+import { FileUp, Loader2, Trash2, UserRound, Download } from 'lucide-react';
 import * as xlsx from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,6 +46,18 @@ const parseXLSX = (file: File): Promise<Contact[]> => {
     reader.onerror = (error) => reject(error);
     reader.readAsBinaryString(file);
   });
+};
+
+const downloadSampleFile = () => {
+  const sampleData = [
+    { name: 'John Doe', phone: '5551234567' },
+    { name: 'Jane Smith', phone: '5557654321' },
+    { name: 'Alice Johnson', phone: '5558889999' },
+  ];
+  const worksheet = xlsx.utils.json_to_sheet(sampleData);
+  const workbook = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(workbook, worksheet, 'Contacts');
+  xlsx.writeFile(workbook, 'sample-contacts.xlsx');
 };
 
 
@@ -100,6 +112,7 @@ export default function ContactUploader({
   return (
     <div className="space-y-6">
       {!fileName && !isParsing ? (
+        <div className="space-y-4">
         <Label
           htmlFor="file-upload"
           className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer border-border hover:bg-secondary transition-colors"
@@ -122,6 +135,13 @@ export default function ContactUploader({
             ref={fileInputRef}
           />
         </Label>
+        <div className="flex justify-center">
+            <Button variant="outline" size="sm" onClick={downloadSampleFile} disabled={disabled}>
+              <Download className="mr-2 h-4 w-4" />
+              Download Sample File
+            </Button>
+          </div>
+        </div>
       ) : (
         <div className="flex items-center justify-between p-4 border rounded-lg bg-secondary">
           <div className="flex items-center gap-2">
