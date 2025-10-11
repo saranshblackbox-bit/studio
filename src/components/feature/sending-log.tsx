@@ -1,6 +1,6 @@
 'use client';
 
-import type { LogEntry, LogStatus } from '@/lib/types';
+import type { Contact, LogEntry, LogStatus } from '@/lib/types';
 import {
   Table,
   TableBody,
@@ -11,13 +11,13 @@ import {
 } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Loader2, Clock, Send } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, XCircle, Loader2, Clock, Send, Hourglass } from 'lucide-react';
 
 type SendingLogProps = {
   logs: LogEntry[];
   progress: number;
+  onSendMessage: (contact: Contact) => void;
 };
 
 const StatusInfo: Record<
@@ -28,21 +28,13 @@ const StatusInfo: Record<
     label: string;
   }
 > = {
-  queued: { icon: Clock, variant: 'secondary', label: 'Queued' },
-  sending: { icon: Loader2, variant: 'outline', label: 'Loading' },
-  sent: { icon: Send, variant: 'default', label: 'Actioned' },
+  queued: { icon: Hourglass, variant: 'secondary', label: 'Waiting' },
+  sending: { icon: Loader2, variant: 'outline', label: 'Loading' }, // This status is no longer used but kept for type safety
+  sent: { icon: CheckCircle2, variant: 'default', label: 'Actioned' },
   failed: { icon: XCircle, variant: 'destructive', label: 'Failed' },
 };
 
-const LogRow = ({ log }: { log: LogEntry }) => {
-  const [timeAgo, setTimeAgo] = useState('');
-
-  useEffect(() => {
-    setTimeAgo(formatDistanceToNow(new Date(log.timestamp), { addSuffix: true }));
-    // No interval needed as parent component re-renders will update the timestamp prop
-  }, [log.timestamp]);
-
-
+const LogRow = ({ log, onSendMessage }: { log: LogEntry, onSendMessage: (contact: Contact) => void }) => {
   const Info = StatusInfo[log.status];
   const Icon = Info.icon;
 
@@ -59,28 +51,31 @@ const LogRow = ({ log }: { log: LogEntry }) => {
           variant={Info.variant}
           className="capitalize flex gap-1.5 items-center w-[110px] justify-center"
         >
-          <Icon
-            className={`h-3.5 w-3.5 ${
-              log.status === 'sending' ? 'animate-spin' : ''
-            }`}
-          />
+          <Icon className="h-3.5 w-3.5" />
           <span>{Info.label}</span>
         </Badge>
       </TableCell>
-      <TableCell className="text-right text-muted-foreground text-xs">
-        {timeAgo}
+      <TableCell className="text-right">
+        {log.status === 'queued' && (
+          <Button size="sm" onClick={() => onSendMessage(log.contact)}>
+            <Send className="mr-2 h-4 w-4" />
+            Send
+          </Button>
+        )}
       </TableCell>
     </TableRow>
   );
 };
 
-export default function SendingLog({ logs, progress }: SendingLogProps) {
+export default function SendingLog({ logs, progress, onSendMessage }: SendingLogProps) {
+  const sentCount = logs.filter(log => log.status === 'sent').length;
+  
   return (
     <div className="space-y-4">
       <div>
         <div className="flex justify-between mb-1">
           <span className="text-base font-medium text-primary">
-            Sending Progress
+            Sending Progress ({sentCount} / {logs.length})
           </span>
           <span className="text-sm font-medium text-primary">
             {Math.round(progress)}%
@@ -95,12 +90,12 @@ export default function SendingLog({ logs, progress }: SendingLogProps) {
             <TableRow>
               <TableHead>Contact</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Timestamp</TableHead>
+              <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {logs.map((log) => (
-              <LogRow key={log.contact.id} log={log} />
+              <LogRow key={log.contact.id} log={log} onSendMessage={onSendMessage}/>
             ))}
           </TableBody>
         </Table>

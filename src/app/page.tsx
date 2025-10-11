@@ -18,86 +18,69 @@ import { Logo } from '@/components/logo';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 
-// Helper to simulate delay
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export default function Home() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [message, setMessage] = useState<string>('');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isSending, setIsSending] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
+  const [sentCount, setSentCount] = useState(0);
 
   const handleContactsParsed = (parsedContacts: Contact[]) => {
     setContacts(parsedContacts);
     setLogs([]);
-    setProgress(0);
+    setSentCount(0);
   };
-
-  const handleStartSending = async () => {
+  
+  const handleStartProcess = () => {
     if (contacts.length === 0 || !message) return;
 
     setIsSending(true);
-    setProgress(0);
-
     const initialLogs: LogEntry[] = contacts.map((contact) => ({
       contact,
       status: 'queued',
       timestamp: new Date().toISOString(),
     }));
     setLogs(initialLogs);
-
-    // Give user a moment to see the queued logs
-    await sleep(500);
-
-    for (let i = 0; i < contacts.length; i++) {
-      const contact = contacts[i];
-
-      setLogs((prevLogs) =>
-        prevLogs.map((log) =>
-          log.contact.id === contact.id
-            ? { ...log, status: 'sending', timestamp: new Date().toISOString() }
-            : log
-        )
-      );
-
-      // Personalize message
-      const personalizedMessage = message
-        .replace(/{{name}}/g, contact.name)
-        .replace(/{{phone}}/g, contact.phone);
-
-      // Sanitize phone number
-      const sanitizedPhone = contact.phone.replace(/\D/g, '');
-
-      const whatsappUrl = `https://web.whatsapp.com/send?phone=${sanitizedPhone}&text=${encodeURIComponent(
-        personalizedMessage
-      )}`;
-
-      // Open a new tab for each contact.
-      window.open(whatsappUrl, '_blank');
-
-      // There's no reliable way to know if the message was truly sent.
-      // We'll mark it as 'sent' after opening the tab and waiting.
-      // The user needs to manually click send and then can close the tab.
-      setLogs((prevLogs) =>
-        prevLogs.map((log) =>
-          log.contact.id === contact.id
-            ? { ...log, status: 'sent', timestamp: new Date().toISOString() }
-            : log
-        )
-      );
-
-      setProgress(((i + 1) / contacts.length) * 100);
-
-      // Add a longer delay to give the user time to confirm the message and close the tab
-      // before the app opens the next one.
-      if (i < contacts.length - 1) {
-        await sleep(8000); // 8-second delay
-      }
-    }
-
-    setIsSending(false);
   };
+
+  const handleSendMessage = (contact: Contact) => {
+    // Personalize message
+    const personalizedMessage = message
+      .replace(/{{name}}/g, contact.name)
+      .replace(/{{phone}}/g, contact.phone);
+    
+    // Sanitize phone number
+    const sanitizedPhone = contact.phone.replace(/\D/g, '');
+
+    const whatsappUrl = `https://web.whatsapp.com/send?phone=${sanitizedPhone}&text=${encodeURIComponent(
+      personalizedMessage
+    )}`;
+    
+    window.open(whatsappUrl, '_blank');
+
+    setLogs(prevLogs => prevLogs.map(log => 
+      log.contact.id === contact.id 
+      ? { ...log, status: 'sent', timestamp: new Date().toISOString() } 
+      : log
+    ));
+
+    setSentCount(prev => {
+      const newCount = prev + 1;
+      if (newCount === contacts.length) {
+        setIsSending(false);
+      }
+      return newCount;
+    });
+  };
+
+  const handleReset = () => {
+    setIsSending(false);
+    setLogs([]);
+    setSentCount(0);
+    // Note: contacts and message are not cleared to allow for re-sending.
+  };
+
+  const progress = contacts.length > 0 ? (sentCount / contacts.length) * 100 : 0;
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-background p-4 sm:p-6 md:p-8">
@@ -107,12 +90,12 @@ export default function Home() {
       <main className="w-full max-w-4xl space-y-8">
         <Alert>
           <Info className="h-4 w-4" />
-          <AlertTitle>Important: How It Works</AlertTitle>
+          <AlertTitle>How It Works</AlertTitle>
           <AlertDescription>
-            <p>1. This tool will open a new WhatsApp Web tab for each contact, one by one.</p>
-            <p>2. You may need to <strong>allow pop-ups</strong> from this site for it to work correctly.</p>
-            <p className="font-semibold mt-2">3. In the new tab, click the "Send" button. You can then close that tab.</p>
-            <p>4. The app will wait for a few seconds and then open the tab for the next contact.</p>
+            <p>1. After uploading contacts and composing a message, click "Prepare Messages".</p>
+            <p>2. A log will appear. Click the "Send" button for each contact.</p>
+            <p className="font-semibold mt-2">3. A new WhatsApp tab will open. Manually send the message, then close the tab.</p>
+            <p>4. Return here and repeat for the next contact.</p>
           </AlertDescription>
         </Alert>
 
@@ -131,7 +114,7 @@ export default function Home() {
           <CardContent>
             <ContactUploader
               onContactsParsed={handleContactsParsed}
-              disabled={isSending}
+              disabled={isSending || logs.length > 0}
             />
           </CardContent>
         </Card>
@@ -152,47 +135,52 @@ export default function Home() {
           <CardContent>
             <MessageComposer
               onMessageChange={setMessage}
-              disabled={isSending}
+              disabled={isSending || logs.length > 0}
             />
           </CardContent>
         </Card>
 
-        <div className="flex justify-center py-4">
-          <Button
-            size="lg"
-            variant="default"
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg px-12 py-6 rounded-full shadow-lg transform hover:scale-105 transition-transform"
-            onClick={handleStartSending}
-            disabled={isSending || contacts.length === 0 || !message.trim()}
-          >
-            {isSending ? (
-              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-            ) : (
+        {logs.length === 0 ? (
+          <div className="flex justify-center py-4">
+            <Button
+              size="lg"
+              variant="default"
+              className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg px-12 py-6 rounded-full shadow-lg transform hover:scale-105 transition-transform"
+              onClick={handleStartProcess}
+              disabled={contacts.length === 0 || !message.trim()}
+            >
               <Send className="mr-2 h-6 w-6" />
-            )}
-            {isSending
-              ? 'Sending...'
-              : `Start Sending to ${contacts.length} Contacts`}
-          </Button>
-        </div>
-
-        {logs.length > 0 && (
+              Prepare Messages for {contacts.length} Contacts
+            </Button>
+          </div>
+        ) : (
           <Card>
             <CardHeader>
               <CardTitle className="font-headline flex items-center gap-3">
                 <span className="flex items-center justify-center w-8 h-8 text-lg rounded-full bg-primary text-primary-foreground font-bold">
                   3
                 </span>
-                Real-time Sending Log
+                Send Your Messages
               </CardTitle>
               <CardDescription>
-                {isSending
-                  ? 'Opening WhatsApp tabs. Please confirm sending in each new tab.'
-                  : 'Sending process completed.'}
+                {progress < 100
+                  ? 'Click "Send" for each contact below.'
+                  : 'All messages have been processed.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SendingLog logs={logs} progress={progress} />
+              <SendingLog 
+                logs={logs} 
+                progress={progress}
+                onSendMessage={handleSendMessage}
+              />
+              {progress === 100 && (
+                 <div className="flex justify-center mt-6">
+                    <Button onClick={handleReset} variant="outline">
+                      Start New Batch
+                    </Button>
+                 </div>
+              )}
             </CardContent>
           </Card>
         )}
