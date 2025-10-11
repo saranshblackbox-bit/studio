@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -27,6 +27,7 @@ export default function Home() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
+  const whatsappTabRef = useRef<Window | null>(null);
 
   const handleContactsParsed = (parsedContacts: Contact[]) => {
     setContacts(parsedContacts);
@@ -52,7 +53,7 @@ export default function Home() {
 
     for (let i = 0; i < contacts.length; i++) {
       const contact = contacts[i];
-      
+
       setLogs((prevLogs) =>
         prevLogs.map((log) =>
           log.contact.id === contact.id
@@ -65,7 +66,7 @@ export default function Home() {
       const personalizedMessage = message
         .replace(/{{name}}/g, contact.name)
         .replace(/{{phone}}/g, contact.phone);
-      
+
       // Sanitize phone number
       const sanitizedPhone = contact.phone.replace(/\D/g, '');
 
@@ -73,9 +74,20 @@ export default function Home() {
         personalizedMessage
       )}`;
 
-      // Use a named window to reuse the same tab
-      window.open(whatsappUrl, 'whatsapp_tab');
-      
+      // On the first iteration, open a new tab and store its reference.
+      // On subsequent iterations, reuse the existing tab.
+      if (i === 0) {
+        whatsappTabRef.current = window.open(whatsappUrl, 'whatsapp_tab');
+      } else {
+        if (whatsappTabRef.current && !whatsappTabRef.current.closed) {
+          whatsappTabRef.current.location.href = whatsappUrl;
+          whatsappTabRef.current.focus();
+        } else {
+          // If the user closed the tab, open a new one.
+          whatsappTabRef.current = window.open(whatsappUrl, 'whatsapp_tab');
+        }
+      }
+
       await sleep(1000); // Give browser time to focus/load the tab
 
       // There's no reliable way to know if the message was truly sent.
@@ -90,11 +102,11 @@ export default function Home() {
       );
 
       setProgress(((i + 1) / contacts.length) * 100);
-      
+
       // Add a longer delay to give the user time to confirm the message in the tab
       // before the app loads the next contact.
       if (i < contacts.length - 1) {
-        await sleep(5000); 
+        await sleep(5000);
       }
     }
 
