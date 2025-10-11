@@ -15,6 +15,7 @@ import {
 import type { Contact } from '@/lib/types';
 import { FileUp, Loader2, Trash2, UserRound } from 'lucide-react';
 import * as xlsx from 'xlsx';
+import { useToast } from '@/hooks/use-toast';
 
 const parseXLSX = (file: File): Promise<Contact[]> => {
   return new Promise((resolve, reject) => {
@@ -61,6 +62,7 @@ export default function ContactUploader({
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isParsing, setIsParsing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -73,9 +75,13 @@ export default function ContactUploader({
         const parsedContacts = await parseXLSX(file);
         setContacts(parsedContacts);
         onContactsParsed(parsedContacts);
-      } catch (error) {
-        console.error('Failed to parse file:', error);
-        // Handle parsing error (e.g., show a toast notification)
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to parse file',
+          description: error.message || 'Please check the file format and content.',
+        });
+        handleClear();
       } finally {
         setIsParsing(false);
       }
