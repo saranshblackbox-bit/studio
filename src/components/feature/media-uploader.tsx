@@ -59,9 +59,9 @@ export default function MediaUploader({
     <div className="space-y-4">
        <Alert className="bg-blue-50 border-blue-200">
         <ClipboardPaste className="h-4 w-4 text-blue-700" />
-          <AlertTitle className="text-blue-800">New Feature!</AlertTitle>
+          <AlertTitle className="text-blue-800">Media Support</AlertTitle>
           <AlertDescription className="text-blue-700">
-            Select a media file here. When you send a message, it will be copied to your clipboard. Simply paste it (Ctrl+V) in WhatsApp!
+            For images, we'll copy it to your clipboard. For videos, you'll need to attach them manually in WhatsApp after the chat opens.
           </AlertDescription>
         </Alert>
 
@@ -82,7 +82,7 @@ export default function MediaUploader({
             type="file"
             className="sr-only"
             onChange={handleFileChange}
-            accept="image/*,video/mp4,video/quicktime"
+            accept="image/*,video/mp4,video/quicktime,video/webm"
             disabled={disabled}
             ref={fileInputRef}
           />

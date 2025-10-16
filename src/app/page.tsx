@@ -60,22 +60,30 @@ export default function Home() {
       personalizedMessage
     )}`;
     
-    if (mediaFile) {
+    if (mediaFile && mediaFile.type === 'image') {
       try {
+        // The ClipboardItem API is more reliable for images than videos.
         const clipboardItem = new ClipboardItem({ [mediaFile.file.type]: mediaFile.file });
         await navigator.clipboard.write([clipboardItem]);
         toast({
-          title: 'Media Copied to Clipboard',
-          description: 'The media file has been copied. Paste it (Ctrl+V) in the WhatsApp chat.',
+          title: 'Image Copied to Clipboard',
+          description: 'The image has been copied. Paste it (Ctrl+V) in the WhatsApp chat.',
         });
       } catch (error) {
-        console.error('Failed to copy media to clipboard:', error);
+        console.error('Failed to copy image to clipboard:', error);
         toast({
           variant: 'destructive',
           title: 'Clipboard Error',
-          description: 'Could not copy the media file to your clipboard. You may need to attach it manually.',
+          description: 'Could not copy the image file. You may need to attach it manually.',
         });
       }
+    } else if (mediaFile && mediaFile.type === 'video') {
+      // For videos, clipboard support is unreliable. Instruct user to attach manually.
+      toast({
+        title: 'Attach Video Manually',
+        description: 'The WhatsApp chat is open. Please attach your video file manually.',
+        duration: 5000,
+      });
     }
 
     window.open(whatsappUrl, '_blank');
@@ -116,9 +124,10 @@ export default function Home() {
           <AlertDescription>
             <p>1. Upload contacts, compose a message, and optionally add media.</p>
             <p>2. Click "Prepare Messages". A log will appear below.</p>
-            <p>3. Click the "Send" button for each contact to open the WhatsApp app.</p>
-            <p className="font-semibold mt-2">4. If you added media, paste it (Ctrl+V) into the chat. Then, manually send the message.</p>
-            <p>5. Return here and repeat for the next contact.</p>
+            <p>3. Click "Send" for each contact to open the WhatsApp app/web.</p>
+            <p className="font-semibold mt-2">4. If you added an image, it's copied to your clipboard. Paste it (Ctrl+V).</p>
+            <p className="font-semibold">5. If you added a video, attach it manually using the paperclip icon in WhatsApp.</p>
+            <p>6. Manually send the message and return here for the next contact.</p>
           </AlertDescription>
         </Alert>
 
