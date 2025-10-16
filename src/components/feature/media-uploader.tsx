@@ -82,25 +82,25 @@ export default function MediaUploader({
             type="file"
             className="sr-only"
             onChange={handleFileChange}
-            accept="image/*,video/*"
+            accept="image/*,video/mp4,video/quicktime"
             disabled={disabled}
             ref={fileInputRef}
           />
         </Label>
       ) : (
         <div className="space-y-3">
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden border">
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden border bg-black">
             {mediaFile.type === 'image' ? (
-              <img src={mediaFile.previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              <img src={mediaFile.previewUrl} alt="Preview" className="w-full h-full object-contain" />
             ) : (
-              <video src={mediaFile.previewUrl} controls className="w-full h-full object-cover" />
+              <video src={mediaFile.previewUrl} controls className="w-full h-full object-contain" />
             )}
              <Button
                 variant="destructive"
                 size="icon"
                 onClick={handleClear}
                 disabled={disabled}
-                className="absolute top-2 right-2 h-8 w-8"
+                className="absolute top-2 right-2 h-8 w-8 z-10"
             >
                 <Trash2 className="w-4 h-4" />
                 <span className="sr-only">Remove media</span>
