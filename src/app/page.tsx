@@ -9,21 +9,25 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { Contact, LogEntry } from '@/lib/types';
+import type { Contact, LogEntry, MediaFile } from '@/lib/types';
 import ContactUploader from '@/components/feature/contact-uploader';
 import MessageComposer from '@/components/feature/message-composer';
 import SendingLog from '@/components/feature/sending-log';
 import { Loader2, Send } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Info, ClipboardPaste } from 'lucide-react';
+import MediaUploader from '@/components/feature/media-uploader';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [message, setMessage] = useState<string>('');
+  const [mediaFile, setMediaFile] = useState<MediaFile | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [sentCount, setSentCount] = useState(0);
+  const { toast } = useToast();
 
   const handleContactsParsed = (parsedContacts: Contact[]) => {
     setContacts(parsedContacts);
@@ -43,7 +47,7 @@ export default function Home() {
     setLogs(initialLogs);
   };
 
-  const handleSendMessage = (contact: Contact) => {
+  const handleSendMessage = async (contact: Contact) => {
     // Personalize message
     const personalizedMessage = message
       .replace(/{{name}}/g, contact.name)
@@ -56,6 +60,24 @@ export default function Home() {
       personalizedMessage
     )}`;
     
+    if (mediaFile) {
+      try {
+        const clipboardItem = new ClipboardItem({ [mediaFile.file.type]: mediaFile.file });
+        await navigator.clipboard.write([clipboardItem]);
+        toast({
+          title: 'Media Copied to Clipboard',
+          description: 'The media file has been copied. Paste it (Ctrl+V) in the WhatsApp chat.',
+        });
+      } catch (error) {
+        console.error('Failed to copy media to clipboard:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Clipboard Error',
+          description: 'Could not copy the media file to your clipboard. You may need to attach it manually.',
+        });
+      }
+    }
+
     window.open(whatsappUrl, '_blank');
 
     setLogs(prevLogs => prevLogs.map(log => 
@@ -92,10 +114,11 @@ export default function Home() {
           <Info className="h-4 w-4" />
           <AlertTitle>How It Works</AlertTitle>
           <AlertDescription>
-            <p>1. After uploading contacts and composing a message, click "Prepare Messages".</p>
-            <p>2. A log will appear. Click the "Send" button for each contact.</p>
-            <p className="font-semibold mt-2">3. A new WhatsApp tab will open. Manually send the message, then close the tab.</p>
-            <p>4. Return here and repeat for the next contact.</p>
+            <p>1. Upload contacts, compose a message, and optionally add media.</p>
+            <p>2. Click "Prepare Messages". A log will appear.</p>
+            <p>3. Click the "Send" button for each contact.</p>
+            <p className="font-semibold mt-2">4. A new WhatsApp tab will open. If you added media, paste it (Ctrl+V) into the chat. Then, manually send the message and close the tab.</p>
+            <p>5. Return here and repeat for the next contact.</p>
           </AlertDescription>
         </Alert>
 
@@ -119,26 +142,46 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 text-lg rounded-full bg-primary text-primary-foreground font-bold">
-                2
-              </span>
-              Compose Message
-            </CardTitle>
-            <CardDescription>
-              Write your message. Use placeholders like {'{{name}}'} to
-              personalize it.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <MessageComposer
-              onMessageChange={setMessage}
-              disabled={isSending || logs.length > 0}
-            />
-          </CardContent>
-        </Card>
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 text-lg rounded-full bg-primary text-primary-foreground font-bold">
+                  2
+                </span>
+                Compose Message
+              </CardTitle>
+              <CardDescription>
+                Use placeholders like {'{{name}}'}.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MessageComposer
+                onMessageChange={setMessage}
+                disabled={isSending || logs.length > 0}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-headline flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 text-lg rounded-full bg-primary/80 text-primary-foreground font-bold">
+                  +
+                </span>
+                Add Optional Media
+              </CardTitle>
+              <CardDescription>
+                (Optional) Select an image or video.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MediaUploader
+                onMediaSelected={setMediaFile}
+                disabled={isSending || logs.length > 0}
+              />
+            </CardContent>
+          </Card>
+        </div>
 
         {logs.length === 0 ? (
           <div className="flex justify-center py-4">

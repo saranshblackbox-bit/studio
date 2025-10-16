@@ -11,3 +11,9 @@ export type LogEntry = {
   status: LogStatus;
   timestamp: string;
 };
+
+export type MediaFile = {
+  file: File;
+  previewUrl: string;
+  type: 'image' | 'video';
+};
