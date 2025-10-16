@@ -56,7 +56,7 @@ export default function Home() {
     // Sanitize phone number
     const sanitizedPhone = contact.phone.replace(/\D/g, '');
 
-    const whatsappUrl = `https://web.whatsapp.com/send?phone=${sanitizedPhone}&text=${encodeURIComponent(
+    const whatsappUrl = `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(
       personalizedMessage
     )}`;
     
@@ -115,9 +115,9 @@ export default function Home() {
           <AlertTitle>How It Works</AlertTitle>
           <AlertDescription>
             <p>1. Upload contacts, compose a message, and optionally add media.</p>
-            <p>2. Click "Prepare Messages". A log will appear.</p>
-            <p>3. Click the "Send" button for each contact.</p>
-            <p className="font-semibold mt-2">4. A new WhatsApp tab will open. If you added media, paste it (Ctrl+V) into the chat. Then, manually send the message and close the tab.</p>
+            <p>2. Click "Prepare Messages". A log will appear below.</p>
+            <p>3. Click the "Send" button for each contact to open the WhatsApp app.</p>
+            <p className="font-semibold mt-2">4. If you added media, paste it (Ctrl+V) into the chat. Then, manually send the message.</p>
             <p>5. Return here and repeat for the next contact.</p>
           </AlertDescription>
         </Alert>
