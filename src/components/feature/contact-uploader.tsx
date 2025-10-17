@@ -154,7 +154,7 @@ export default function ContactUploader({
             variant="ghost"
             size="icon"
             onClick={handleClear}
-            disabled={disabled || isParsing}
+            disabled={isParsing}
           >
             <Trash2 className="w-5 h-5" />
             <span className="sr-only">Remove file</span>
