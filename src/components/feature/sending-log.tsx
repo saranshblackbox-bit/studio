@@ -12,6 +12,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle2, XCircle, Loader2, Clock, Send, Hourglass } from 'lucide-react';
 
 type SendingLogProps = {
@@ -84,7 +85,7 @@ export default function SendingLog({ logs, progress, onSendMessage }: SendingLog
         <Progress value={progress} className="w-full" />
       </div>
 
-      <div className="max-h-96 overflow-y-auto rounded-md border">
+      <ScrollArea className="h-96 rounded-md border">
         <Table>
           <TableHeader className="sticky top-0 bg-muted/80 backdrop-blur-sm">
             <TableRow>
@@ -99,7 +100,7 @@ export default function SendingLog({ logs, progress, onSendMessage }: SendingLog
             ))}
           </TableBody>
         </Table>
-      </div>
+      </ScrollArea>
     </div>
   );
 }
